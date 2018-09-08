@@ -1,0 +1,20 @@
+import org.gradle.internal.jvm.Jvm
+
+apply plugin: 'java-library'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+  implementation project(':reflect')
+  implementation deps.javaPoet
+  implementation deps.annotations
+
+  compileOnly deps.autoService
+  annotationProcessor deps.autoService
+
+  testImplementation deps.junit
+  testImplementation deps.truth
+  testImplementation deps.compileTesting
+  testImplementation files(Jvm.current().getToolsJar())
+}

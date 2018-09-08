@@ -1,0 +1,14 @@
+apply plugin: 'java-library'
+
+sourceCompatibility = JavaVersion.VERSION_1_6
+targetCompatibility = JavaVersion.VERSION_1_6
+
+dependencies {
+  api deps.dagger.runtime
+  implementation deps.annotations
+
+  testImplementation project(':codegen')
+  testImplementation deps.junit
+  testImplementation deps.truth
+  testAnnotationProcessor deps.dagger.compiler
+}

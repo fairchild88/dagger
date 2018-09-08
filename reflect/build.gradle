@@ -1,0 +1,21 @@
+buildscript {
+  ext.deps = [
+    'dagger': [
+      'runtime': 'com.google.dagger:dagger:2.17',
+      'compiler': 'com.google.dagger:dagger-compiler:2.17',
+    ],
+    'annotations': 'org.jetbrains:annotations:16.0.2',
+    'junit': 'junit:junit:4.12',
+    'truth': 'com.google.truth:truth:0.42',
+    'javaPoet': 'com.squareup:javapoet:1.11.1',
+    'autoService': 'com.google.auto.service:auto-service:1.0-rc4',
+    'compileTesting': 'com.google.testing.compile:compile-testing:0.15',
+  ]
+}
+
+allprojects {
+  repositories {
+    mavenCentral()
+    jcenter()
+  }
+}
