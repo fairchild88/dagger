@@ -1,6 +1,7 @@
 package dagger.reflect;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -68,6 +69,23 @@ final class Util {
     throw new RuntimeException(
         "Unable to invoke " + method + " on " + target + " with arguments "
             + Arrays.toString(arguments), cause);
+  }
+
+  static <T> T tryNewInstance(Constructor<T> constructor, Object... arguments) {
+    Throwable cause;
+    try {
+      return constructor.newInstance(arguments);
+    } catch (IllegalAccessException e) {
+      cause = e;
+    } catch (InstantiationException e) {
+      cause = e;
+    } catch (InvocationTargetException e) {
+      cause = e.getCause();
+      if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+      if (cause instanceof Error) throw (Error) cause;
+    }
+    throw new RuntimeException(
+        "Unable to invoke " + constructor + " with arguments " + Arrays.toString(arguments), cause);
   }
 
   private Util() {}

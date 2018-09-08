@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 final class InstanceGraph {
   private final @Nullable InstanceGraph parent;
-  private final ConcurrentHashMap<Key, Provider<?>> bindings =
-      new ConcurrentHashMap<Key, Provider<?>>();
+  private final ConcurrentHashMap<Key, Binding<?>> bindings =
+      new ConcurrentHashMap<Key, Binding<?>>();
 
   InstanceGraph() {
     this(null);
@@ -19,25 +19,39 @@ final class InstanceGraph {
     this.parent = parent;
   }
 
-  void put(Key key, Provider<?> provider) {
+  void put(Key key, Binding<?> provider) {
     if (bindings.put(key, provider) != null) {
       throw new IllegalStateException("Duplicate binding for " + key);
     }
   }
 
-  Object getInstance(Key key) {
-    return getProvider(key).get();
+  private Binding<?> getBinding(Key key) {
+    Binding<?> binding = bindings.get(key);
+    if (binding != null) {
+      return binding;
+    }
+    if (parent != null) {
+      binding = parent.getBinding(key);
+      if (binding != null) {
+        return binding;
+      }
+    }
+
+    Binding<?> newBinding = new JustInTimeBinding(key);
+    Binding<?> oldBinding = bindings.putIfAbsent(key, newBinding);
+    return oldBinding != null ? oldBinding : newBinding;
   }
 
-  Provider<?> getProvider(Key key) {
-    Provider<?> provider = bindings.get(key);
-    if (provider == null && parent != null) {
-      provider = parent.getProvider(key);
-    }
-    if (provider == null) {
-      throw new IllegalStateException("No binding for " + key);
-    }
-    return provider;
+  Object getInstance(Key key) {
+    return getBinding(key).resolve(this);
+  }
+
+  Provider<?> getProvider(final Key key) {
+    return new Provider<Object>() {
+      @Override public Object get() {
+        return getInstance(key);
+      }
+    };
   }
 
   Lazy<?> getLazy(Key key) {

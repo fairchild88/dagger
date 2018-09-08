@@ -1,18 +1,31 @@
 package dagger.reflect;
 
+import com.google.auto.value.AutoValue;
 import dagger.Lazy;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.inject.Provider;
+import org.jetbrains.annotations.NotNull;
 
 /** A key and its lookup type. */
-final class Request {
+@AutoValue
+abstract class Request {
   static Request fromMethodParameter(Method method, int parameterIndex) {
-    Annotation qualifier = Util.findQualifier(method.getParameterAnnotations()[parameterIndex]);
+    return fromTypeAndAnnotations(
+        method.getGenericParameterTypes()[parameterIndex],
+        method.getParameterAnnotations()[parameterIndex]);
+  }
 
-    Type type = method.getGenericParameterTypes()[parameterIndex];
+  static Request fromConstructorParameter(Constructor<?> constructor, int parameterIndex) {
+    return fromTypeAndAnnotations(
+        constructor.getGenericParameterTypes()[parameterIndex],
+        constructor.getParameterAnnotations()[parameterIndex]);
+  }
+
+  private static Request fromTypeAndAnnotations(Type type, Annotation[] annotations) {
     Lookup lookup = Lookup.INSTANCE;
     if (type instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -26,19 +39,19 @@ final class Request {
       }
     }
 
-    return new Request(new Key(qualifier, type), lookup);
+    Annotation qualifier = Util.findQualifier(annotations);
+    return new AutoValue_Request(Key.of(qualifier, type), lookup);
   }
 
-  private final Key key;
-  private final Lookup lookup;
-
-  Request(Key key, Lookup lookup) {
-    this.key = key;
-    this.lookup = lookup;
+  static Request of(Key key, Lookup lookup) {
+    return new AutoValue_Request(key, lookup);
   }
+
+  abstract Key key();
+  abstract Lookup lookup();
 
   Object resolve(InstanceGraph instanceGraph) {
-    return lookup.lookup(instanceGraph, key);
+    return lookup().lookup(instanceGraph, key());
   }
 
   enum Lookup {

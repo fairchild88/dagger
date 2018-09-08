@@ -40,7 +40,7 @@ final class ComponentInvocationHandler implements InvocationHandler {
         throw notImplemented("Subcomponents");
       }
 
-      Key key = new Key(findQualifier(annotations), returnType);
+      Key key = Key.of(findQualifier(annotations), returnType);
       return instanceGraph.getInstance(key);
     }
 

@@ -7,6 +7,9 @@ dependencies {
   api deps.dagger.runtime
   implementation deps.annotations
 
+  implementation deps.autoValueAnnotations
+  annotationProcessor deps.autoValue
+
   testImplementation project(':codegen')
   testImplementation deps.junit
   testImplementation deps.truth
