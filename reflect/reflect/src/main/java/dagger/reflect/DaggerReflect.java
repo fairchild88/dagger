@@ -4,6 +4,9 @@ import dagger.Binds;
 import dagger.Component;
 import dagger.Module;
 import dagger.Provides;
+import dagger.multibindings.ElementsIntoSet;
+import dagger.multibindings.IntoMap;
+import dagger.multibindings.IntoSet;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -63,7 +66,7 @@ public final class DaggerReflect {
         Annotation qualifier = findQualifier(annotations);
         Key key = Key.of(qualifier, returnType);
 
-        Binding<?> binding;
+        Binding<Object> binding;
         if (hasAnnotation(annotations, Provides.class)) {
           binding = new ProvidesBinding(method);
         } else if (hasAnnotation(annotations, Binds.class)) {
@@ -71,7 +74,17 @@ public final class DaggerReflect {
         } else {
           throw notImplemented("Method " + method);
         }
-        graphBuilder.addBinding(key, binding);
+
+        if (hasAnnotation(annotations, IntoSet.class)) {
+          graphBuilder.addSetBinding(Key.setOf(key), binding);
+        } else if (hasAnnotation(annotations, ElementsIntoSet.class)) {
+          throw notImplemented("@ElementsIntoSet");
+        } else if (hasAnnotation(annotations, IntoMap.class)) {
+          // TODO find map key annotation, get value, create map Key, call addMapBinding
+          throw notImplemented("@IntoMap");
+        } else {
+          graphBuilder.addBinding(key, binding);
+        }
       }
     }
 

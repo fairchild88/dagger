@@ -21,4 +21,9 @@ public final class DaggerTest {
     TestComponent component = frontend.create(TestComponent.class);
     assertThat(component.hello()).isEqualTo("Hello, world!");
   }
+
+  @Test public void set() {
+    TestComponent component = frontend.create(TestComponent.class);
+    assertThat(component.strings()).containsExactly("Hello", "world");
+  }
 }

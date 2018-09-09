@@ -1,6 +1,8 @@
 package dagger;
 
+import dagger.multibindings.IntoSet;
 import java.lang.annotation.Retention;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
@@ -10,6 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Component(modules = TestModule.class)
 interface TestComponent {
   CharSequence hello();
+  Set<String> strings();
 }
 
 @Module
@@ -18,9 +21,15 @@ abstract class TestModule {
     return greeting.get();
   }
 
+  @Provides @IntoSet static String provideGreetingIntoSet(@Greeting String string) {
+    return string;
+  }
+
   @Provides static @Target String provideTargetString() {
     return "world";
   }
+
+  @Binds @IntoSet abstract String bindTargetStringIntoSet(@Target String target);
 
   @Provides static @Exclamation String provideExclaimationString() {
     return "!";
