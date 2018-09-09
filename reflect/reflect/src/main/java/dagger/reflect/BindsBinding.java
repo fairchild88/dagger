@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import org.jetbrains.annotations.Nullable;
 
+import static dagger.reflect.Util.validateVisibility;
 import static java.lang.reflect.Modifier.ABSTRACT;
 
 final class BindsBinding extends Binding<Object> {
@@ -28,8 +29,7 @@ final class BindsBinding extends Binding<Object> {
           + method.getName());
     }
 
-    // TODO check visibility
-    method.setAccessible(true);
+    validateVisibility(method);
 
     // TODO validate scope
 

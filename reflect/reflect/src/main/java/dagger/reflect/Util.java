@@ -1,15 +1,31 @@
 package dagger.reflect;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import javax.inject.Qualifier;
 import javax.inject.Scope;
 import org.jetbrains.annotations.Nullable;
 
+import static java.lang.reflect.Modifier.PRIVATE;
+import static java.lang.reflect.Modifier.PROTECTED;
+import static java.lang.reflect.Modifier.PUBLIC;
+
 final class Util {
+  static <T extends AccessibleObject & Member> void validateVisibility(T target) {
+    int modifiers = target.getModifiers();
+    if ((modifiers & (PRIVATE | PROTECTED)) != 0) {
+      throw new IllegalStateException(target + " must be public or package-protected");
+    }
+    if ((modifiers & PUBLIC) == 0) {
+      target.setAccessible(true);
+    }
+  }
+
   static @Nullable Annotation findQualifier(Annotation[] annotations) {
     Annotation qualifier = null;
     for (Annotation annotation : annotations) {

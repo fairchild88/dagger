@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import javax.inject.Inject;
 
 import static dagger.reflect.Util.tryNewInstance;
+import static dagger.reflect.Util.validateVisibility;
 
 final class JustInTimeBinding extends Binding<Object> {
   private final Key key;
@@ -36,10 +37,7 @@ final class JustInTimeBinding extends Binding<Object> {
     if (constructor == null) {
       throw new IllegalStateException(targetClass + " has no @Inject constructor");
     }
-
-    // TODO check visibility
-    constructor.setAccessible(true);
-
+    validateVisibility(constructor);
     this.constructor = constructor;
 
     int parameterCount = constructor.getParameterTypes().length;

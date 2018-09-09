@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import org.jetbrains.annotations.Nullable;
 
 import static dagger.reflect.Util.tryInvoke;
+import static dagger.reflect.Util.validateVisibility;
 
 final class ProvidesBinding extends Binding<Object> {
   private final Method method;
@@ -14,8 +15,7 @@ final class ProvidesBinding extends Binding<Object> {
   }
 
   @Override protected Request[] initialize(@Nullable Annotation scope) {
-    // TODO check visibility
-    method.setAccessible(true);
+    validateVisibility(method);
 
     // TODO validate scope
 
