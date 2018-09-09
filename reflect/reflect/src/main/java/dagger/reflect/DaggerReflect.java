@@ -34,9 +34,9 @@ public final class DaggerReflect {
       throw notImplemented("Component dependencies");
     }
 
-    Annotation scope = findScope(componentClass.getAnnotations());
+    InstanceGraph.Builder graphBuilder = new InstanceGraph.Builder()
+        .scope(findScope(componentClass.getAnnotations()));
 
-    final InstanceGraph instanceGraph = new InstanceGraph();
     Deque<Class<?>> moduleQueue = new ArrayDeque<Class<?>>();
     Set<Class<?>> seenModules = new LinkedHashSet<Class<?>>();
     Collections.addAll(moduleQueue, component.modules());
@@ -57,22 +57,25 @@ public final class DaggerReflect {
       }
       Collections.addAll(moduleQueue, module.includes());
 
-      for (final Method method : moduleClass.getDeclaredMethods()) {
+      for (Method method : moduleClass.getDeclaredMethods()) {
         Type returnType = method.getGenericReturnType();
         Annotation[] annotations = method.getDeclaredAnnotations();
         Annotation qualifier = findQualifier(annotations);
         Key key = Key.of(qualifier, returnType);
 
+        Binding<?> binding;
         if (hasAnnotation(annotations, Provides.class)) {
-          instanceGraph.put(key, new ProvidesBinding(method, scope));
+          binding = new ProvidesBinding(method);
         } else if (hasAnnotation(annotations, Binds.class)) {
-          instanceGraph.put(key, new BindsBinding(method, scope));
+          binding = new BindsBinding(method);
         } else {
           throw notImplemented("Method " + method);
         }
+        graphBuilder.addBinding(key, binding);
       }
     }
 
+    InstanceGraph instanceGraph = graphBuilder.build();
     //noinspection unchecked Single interface proxy.
     return (C) Proxy.newProxyInstance(componentClass.getClassLoader(),
         new Class<?>[] { componentClass }, new ComponentInvocationHandler(instanceGraph));

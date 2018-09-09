@@ -1,6 +1,8 @@
 package dagger.reflect;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
 import javax.inject.Inject;
 
 import static dagger.reflect.Util.tryNewInstance;
@@ -13,40 +15,46 @@ final class JustInTimeBinding extends Binding<Object> {
     this.key = key;
   }
 
-  @Override protected Request[] initialize() {
-    if (key.qualifer() == null && key.type() instanceof Class<?>) {
-      Class<?> target = (Class<?>) key.type();
+  @Override protected Request[] initialize(Annotation scope) {
+    Type targetType = key.type();
+    if (key.qualifer() != null || !(targetType instanceof Class<?>)) {
+      throw new IllegalStateException("No binding for " + key);
+    }
+    Class<?> targetClass = (Class<?>) targetType;
 
-      Constructor<?> constructor = null;
-      for (Constructor<?> candidate : target.getDeclaredConstructors()) {
-        if (candidate.getAnnotation(Inject.class) != null) {
-          if (constructor != null) {
-            throw new IllegalStateException(target + " defines multiple @Inject constructors");
-          }
-          constructor = candidate;
+    // TODO validate scope
+
+    Constructor<?> constructor = null;
+    for (Constructor<?> candidate : targetClass.getDeclaredConstructors()) {
+      if (candidate.getAnnotation(Inject.class) != null) {
+        if (constructor != null) {
+          throw new IllegalStateException(targetClass + " defines multiple @Inject constructors");
         }
+        constructor = candidate;
       }
-      if (constructor == null) {
-        throw new IllegalStateException(target + " has no @Inject constructor");
-      }
-
-      // TODO check visibility
-      constructor.setAccessible(true);
-
-      this.constructor = constructor;
-
-      int parameterCount = constructor.getParameterTypes().length;
-      Request[] requests = new Request[parameterCount];
-      for (int i = 0; i < parameterCount; i++) {
-        requests[i] = Request.fromConstructorParameter(constructor, i);
-      }
-      return requests;
+    }
+    if (constructor == null) {
+      throw new IllegalStateException(targetClass + " has no @Inject constructor");
     }
 
-    throw new IllegalStateException("No binding for " + key);
+    // TODO check visibility
+    constructor.setAccessible(true);
+
+    this.constructor = constructor;
+
+    int parameterCount = constructor.getParameterTypes().length;
+    Request[] requests = new Request[parameterCount];
+    for (int i = 0; i < parameterCount; i++) {
+      requests[i] = Request.fromConstructorParameter(constructor, i);
+    }
+    return requests;
   }
 
   @Override protected Object resolve(Object[] dependencies) {
     return tryNewInstance(constructor, dependencies);
+  }
+
+  @Override public String toString() {
+    return "JustInTimeBinding[" + key + "]";
   }
 }

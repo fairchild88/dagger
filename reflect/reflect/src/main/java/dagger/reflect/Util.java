@@ -10,10 +10,6 @@ import javax.inject.Scope;
 import org.jetbrains.annotations.Nullable;
 
 final class Util {
-  static boolean equals(@Nullable Object left, @Nullable Object right) {
-    return left == null ? right == null : left.equals(right);
-  }
-
   static @Nullable Annotation findQualifier(Annotation[] annotations) {
     Annotation qualifier = null;
     for (Annotation annotation : annotations) {

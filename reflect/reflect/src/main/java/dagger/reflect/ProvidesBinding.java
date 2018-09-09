@@ -2,29 +2,22 @@ package dagger.reflect;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import org.jetbrains.annotations.Nullable;
 
-import static dagger.reflect.Util.findScope;
 import static dagger.reflect.Util.tryInvoke;
 
 final class ProvidesBinding extends Binding<Object> {
   private final Method method;
-  private final Annotation scope;
 
-  ProvidesBinding(Method method, Annotation scope) {
+  ProvidesBinding(Method method) {
     this.method = method;
-    this.scope = scope;
   }
 
-  @Override protected Request[] initialize() {
+  @Override protected Request[] initialize(@Nullable Annotation scope) {
     // TODO check visibility
     method.setAccessible(true);
 
-    Annotation[] annotations = method.getDeclaredAnnotations();
-    Annotation methodScope = findScope(annotations);
-    if (!Util.equals(scope, methodScope)) {
-      // TODO real error message
-      throw new IllegalStateException("Cannot provide " + methodScope + " in " + scope);
-    }
+    // TODO validate scope
 
     int parameterCount = method.getParameterTypes().length;
     Request[] requests = new Request[parameterCount];
@@ -36,5 +29,9 @@ final class ProvidesBinding extends Binding<Object> {
 
   @Override protected Object resolve(Object[] dependencies) {
     return tryInvoke(method, null, dependencies);
+  }
+
+  @Override public String toString() {
+    return "ProvidesBinding[" + method + "]";
   }
 }
